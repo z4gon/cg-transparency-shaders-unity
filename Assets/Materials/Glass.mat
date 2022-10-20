@@ -78,10 +78,11 @@ Material:
     - _OcclusionStrength: 1
     - _Parallax: 0.02
     - _ReflectionStrength: 0.3
-    - _RefractionStrength: 0.07
+    - _RefractionStrength: 0.17
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
+    - _TransparencyStrength: 0.813
     - _UVSec: 0
     - _ZWrite: 1
     m_Colors:

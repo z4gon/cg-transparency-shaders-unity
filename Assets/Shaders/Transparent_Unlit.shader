@@ -5,6 +5,7 @@ Shader "Unlit/Transparent_Unlit"
         _MainTex ("Texture", 2D) = "white" {}
         _NormalMap ("Normal Map", 2D) = "bump" {}
         _SkyBox ("Sky Box", CUBE) = "cube" {}
+        _TransparencyStrength ("Transparency Strength", Range(0,1)) = 0.6
         _RefractionStrength ("Refraction Strength", Range(0,2)) = 0.2
         _ReflectionStrength ("Reflection Strength", Range(0,1)) = 0.3
     }
@@ -48,6 +49,7 @@ Shader "Unlit/Transparent_Unlit"
 
             samplerCUBE _SkyBox;
 
+            float _TransparencyStrength;
             float _ReflectionStrength;
             float _RefractionStrength;
 
@@ -79,7 +81,7 @@ Shader "Unlit/Transparent_Unlit"
 
                 fixed4 grabColor = tex2Dproj(_GrabTexture, UNITY_PROJ_COORD(i.uv_Grab));
 
-                return color * grabColor;
+                return lerp(grabColor, color * grabColor, _TransparencyStrength);
             }
             ENDCG
         }
