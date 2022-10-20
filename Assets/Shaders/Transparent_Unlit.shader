@@ -5,6 +5,7 @@ Shader "Unlit/Transparent_Unlit"
         _MainTex ("Texture", 2D) = "white" {}
         _NormalMap ("Normal Map", 2D) = "bump" {}
         _SkyBox ("Sky Box", CUBE) = "cube" {}
+        _RefractionStrength ("Refraction Strength", Range(0,2)) = 0.2
         _ReflectionStrength ("Reflection Strength", Range(0,1)) = 0.3
     }
     SubShader
@@ -12,6 +13,10 @@ Shader "Unlit/Transparent_Unlit"
         Tags { "RenderType"="Transparent" }
         Tags { "Queue"="Transparent" }
         LOD 100
+
+        GrabPass {
+            "_GrabTexture"
+        }
 
         Pass
         {
@@ -31,6 +36,8 @@ Shader "Unlit/Transparent_Unlit"
             {
                 float2 uv : TEXCOORD0;
                 float4 vertex : SV_POSITION;
+                float2 uv_Normal : TEXCOORD1;
+                float4 uv_Grab : TEXCOORD2;
             };
 
             sampler2D _MainTex;
@@ -40,60 +47,41 @@ Shader "Unlit/Transparent_Unlit"
             float4 _NormalMap_ST;
 
             samplerCUBE _SkyBox;
+
             float _ReflectionStrength;
+            float _RefractionStrength;
+
+            sampler2D _GrabTexture;
 
             v2f vert (appdata v)
             {
                 v2f o;
-                o.vertex = UnityObjectToClipPos(v.vertex);
+
+                float4 vertexClipPos = UnityObjectToClipPos(v.vertex);
+
+                o.vertex = vertexClipPos;
                 o.uv = TRANSFORM_TEX(v.uv, _MainTex);
+                o.uv_Normal = TRANSFORM_TEX(v.uv, _NormalMap);
+                o.uv_Grab = ComputeGrabScreenPos(vertexClipPos);
+
                 return o;
             }
 
             fixed4 frag (v2f i) : SV_Target
             {
                 // sample the texture
-                fixed4 col = tex2D(_MainTex, i.uv);
-                return col;
+                fixed4 color = tex2D(_MainTex, i.uv);
+
+                fixed4 normal = tex2D(_NormalMap, i.uv_Normal);
+                half4 refraction = normal.rgba;
+
+                i.uv_Grab += refraction * _RefractionStrength;
+
+                fixed4 grabColor = tex2Dproj(_GrabTexture, UNITY_PROJ_COORD(i.uv_Grab));
+
+                return color * grabColor;
             }
             ENDCG
-
-            // CGPROGRAM
-            // #pragma vertex vert
-            // #pragma fragment frag
-
-            // #include "UnityCG.cginc"
-
-            // struct appdata
-            // {
-            //     float4 vertex : POSITION;
-            //     float2 uv : TEXCOORD0;
-            // };
-
-            // struct v2f
-            // {
-            //     float2 uv : TEXCOORD0;
-            //     float4 vertex : SV_POSITION;
-            // };
-
-            // sampler2D _MainTex;
-            // float4 _MainTex_ST;
-
-            // v2f vert (appdata v)
-            // {
-            //     v2f o;
-            //     o.vertex = UnityObjectToClipPos(v.vertex);
-            //     o.uv = TRANSFORM_TEX(v.uv, _MainTex);
-            //     return o;
-            // }
-
-            // fixed4 frag (v2f i) : SV_Target
-            // {
-            //     // sample the texture
-            //     fixed4 col = tex2D(_MainTex, i.uv);
-            //     return col;
-            // }
-            // ENDCG
         }
     }
 }
