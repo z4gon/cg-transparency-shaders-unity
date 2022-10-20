@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: MyMaterial
-  m_Shader: {fileID: 4800000, guid: e85c11165009b445380ce5f5d594c977, type: 3}
+  m_Name: StainedGlass
+  m_Shader: {fileID: 4800000, guid: 527079dbd99804d21b57cd602f7feb53, type: 3}
   m_ValidKeywords: []
   m_InvalidKeywords:
   - _DEBUGGRADIENTS_ON
@@ -44,7 +44,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 46589bc59239448f5a7d41a04fe04c1a, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
@@ -63,6 +63,7 @@ Material:
     - _TilingColumns: 10
     - _TilingRows: 10
     m_Floats:
+    - _AlphaTest: 0.7
     - _BumpScale: 1
     - _Cutoff: 0.5
     - _DebugGradients: 1
