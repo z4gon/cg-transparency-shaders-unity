@@ -9,6 +9,7 @@ Written in Cg for the Built-in RP in **Unity 2021.3.10f1**
 ## Shaders
 
 - [Using Standard Surface Shader](#using-standard-surface-shader)
+- [Using Unlit Shader](#using-unlit-shader)
 
 ---
 
@@ -67,3 +68,66 @@ ENDCG
 
 ![Gif](./docs/4.gif)
 ![Gif](./docs/5.gif)
+
+## Using Unlit Shader
+
+### Create a mesh
+
+![Gif](./docs/6.gif)
+
+### Normal Map and GrabPass
+
+1. Create an unlit shader with a main texture, a normal map and a sky box property.
+1. Define a `_RefractionStrength` value to be able to parametrize the refraction effect.
+
+1. Set the `RenderType` and `Queue` tags to `Transparent` to ensure it renders in front of the geometry of the scene.
+
+1. Use `GrabPass` to get a texture with the current pixels in the Frame Buffer that are behind the object.
+1. Use `ComputeGrabScreenPos` to calculate the uvs to use in the grab pass texture.
+1. Use [tex2Dproj](https://developer.download.nvidia.com/cg/tex2Dproj.html) and `UNITY_PROJ_COORD` with the previously calculated uvs, to get the pixel from the grab pass texture.
+1. Use the normal map to distort the grab pass texture.
+
+```c
+_MainTex ("Texture", 2D) = "white" {}
+_NormalMap ("Normal Map", 2D) = "bump" {}
+_SkyBox ("Sky Box", CUBE) = "cube" {}
+_RefractionStrength ("Refraction Strength", Range(0,2)) = 0.2
+```
+
+```c
+Tags { "RenderType"="Transparent" }
+Tags { "Queue"="Transparent" }
+LOD 100
+
+GrabPass {
+   "_GrabTexture"
+}
+```
+
+```c
+struct v2f
+{
+   float4 uv_Grab : TEXCOORD2;
+};
+
+v2f vert (appdata v)
+{
+   float4 vertexClipPos = UnityObjectToClipPos(v.vertex);
+   o.uv_Grab = ComputeGrabScreenPos(vertexClipPos);
+}
+
+fixed4 frag (v2f i) : SV_Target
+{
+   fixed4 normal = tex2D(_NormalMap, i.uv_Normal);
+   half4 refraction = normal.rgba;
+
+   i.uv_Grab += refraction * _RefractionStrength;
+
+   fixed4 grabColor = tex2Dproj(_GrabTexture, UNITY_PROJ_COORD(i.uv_Grab));
+
+   return color * grabColor;
+}
+```
+
+![Gif](./docs/7.gif)
+![Gif](./docs/8.gif)
