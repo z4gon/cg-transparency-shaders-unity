@@ -2,6 +2,10 @@
 
 Written in Cg for the Built-in RP in **Unity 2021.3.10f1**
 
+## Screenshots
+
+![Gif](./docs/9.gif)
+
 ### References
 
 - [Unity Shaders course by Nik Lever](https://www.udemy.com/course/learn-unity-shaders-from-scratch)
@@ -131,3 +135,31 @@ fixed4 frag (v2f i) : SV_Target
 
 ![Gif](./docs/7.gif)
 ![Gif](./docs/8.gif)
+
+### Sky Box reflection
+
+1. Add the `normal` to the `appdata` struct, to be able to use the normal of the vertex later on.
+1. Use `WorldSpaceViewDir()` to get the vector from the camera to the vertex.
+1. Use `UnityObjectToWorldNormal()` to calculate the normal in world space.
+1. Use [reflect](https://developer.download.nvidia.com/cg/reflect.html) to calculate the reflection of the view direction along the normal.
+1. Use this reflection vector to sample the cube texture of the sky box using [texCUBE](https://developer.download.nvidia.com/cg/texCUBE.html)
+1. Lerp and combine the color, grab pass texture and reflection from the skybox.
+
+```c
+// simple sky box reflection calculation
+float3 viewDir = WorldSpaceViewDir(v.vertex);
+float3 worldNormal = UnityObjectToWorldNormal(v.normal);
+o.reflect = reflect(-viewDir, worldNormal);
+```
+
+```c
+// get the sky box pixel
+fixed4 reflectionColor = texCUBE(_SkyBox, i.reflect);
+
+color = color * grabColor + (reflectionColor * _ReflectionStrength);
+
+return lerp(grabColor, color * grabColor, _TransparencyStrength);
+```
+
+![Gif](./docs/9.gif)
+![Gif](./docs/10.gif)

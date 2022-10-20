@@ -7,7 +7,7 @@ Shader "Unlit/Transparent_Unlit"
         _SkyBox ("Sky Box", CUBE) = "cube" {}
         _TransparencyStrength ("Transparency Strength", Range(0,1)) = 0.6
         _RefractionStrength ("Refraction Strength", Range(0,2)) = 0.2
-        _ReflectionStrength ("Reflection Strength", Range(0,1)) = 0.3
+        _ReflectionStrength ("Reflection Strength", Range(0,2)) = 0.3
     }
     SubShader
     {
@@ -31,6 +31,7 @@ Shader "Unlit/Transparent_Unlit"
             {
                 float4 vertex : POSITION;
                 float2 uv : TEXCOORD0;
+                float3 normal : NORMAL;
             };
 
             struct v2f
@@ -39,6 +40,7 @@ Shader "Unlit/Transparent_Unlit"
                 float4 vertex : SV_POSITION;
                 float2 uv_Normal : TEXCOORD1;
                 float4 uv_Grab : TEXCOORD2;
+                float3 reflect : TEXCOORD3;
             };
 
             sampler2D _MainTex;
@@ -64,7 +66,13 @@ Shader "Unlit/Transparent_Unlit"
                 o.vertex = vertexClipPos;
                 o.uv = TRANSFORM_TEX(v.uv, _MainTex);
                 o.uv_Normal = TRANSFORM_TEX(v.uv, _NormalMap);
+
                 o.uv_Grab = ComputeGrabScreenPos(vertexClipPos);
+
+                // simple sky box reflection calculation
+                float3 viewDir = WorldSpaceViewDir(v.vertex);
+                float3 worldNormal = UnityObjectToWorldNormal(v.normal);
+                o.reflect = reflect(-viewDir, worldNormal);
 
                 return o;
             }
@@ -80,6 +88,11 @@ Shader "Unlit/Transparent_Unlit"
                 i.uv_Grab += refraction * _RefractionStrength;
 
                 fixed4 grabColor = tex2Dproj(_GrabTexture, UNITY_PROJ_COORD(i.uv_Grab));
+
+                // get the sky box pixel
+                fixed4 reflectionColor = texCUBE(_SkyBox, i.reflect);
+
+                color = color * grabColor + (reflectionColor * _ReflectionStrength);
 
                 return lerp(grabColor, color * grabColor, _TransparencyStrength);
             }
